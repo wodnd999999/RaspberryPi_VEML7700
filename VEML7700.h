@@ -4,8 +4,9 @@
 //
 // released under MIT License (see file)
 
-#include <Arduino.h>
-#include <Wire.h>
+#include <stdint.h>
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
 
 class VEML7700
 {
@@ -97,5 +98,6 @@ private:
                       VEML7700::als_gain_t& auto_gain,
                       VEML7700::als_itime_t& auto_itime,
                       uint16_t& raw_counts);
+  int fd;
 
 };

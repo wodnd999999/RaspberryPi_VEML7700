@@ -4,7 +4,7 @@
 //
 // released under MIT License (see file)
 
-#include <VEML7700.h>
+#include "VEML7700.h"
 
 VEML7700::
 VEML7700()
@@ -15,7 +15,7 @@ void
 VEML7700::
 begin()
 {
-  Wire.begin();
+  fd = wiringPiI2CSetup(I2C_ADDRESS);
 
   // write initial state to VEML7700
   register_cache[0] = ( (uint16_t(ALS_GAIN_x2) << ALS_SM_SHIFT) |
@@ -39,17 +39,7 @@ uint8_t
 VEML7700::
 sendData(uint8_t command, uint16_t data)
 {
-  Wire.beginTransmission(I2C_ADDRESS);
-  if (Wire.write(command) != 1){
-    return STATUS_ERROR;
-  }
-  if (Wire.write(uint8_t(data & 0xff)) != 1){
-    return STATUS_ERROR;
-  }
-  if (Wire.write(uint8_t(data >> 8)) != 1){
-    return STATUS_ERROR;
-  }
-  if (Wire.endTransmission()){
+  if (wiringPiI2CWriteReg16(fd, command, data) == -1){
     return STATUS_ERROR;
   }
   return STATUS_OK;
@@ -59,18 +49,9 @@ uint8_t
 VEML7700::
 receiveData(uint8_t command, uint16_t& data)
 {
-  Wire.beginTransmission(I2C_ADDRESS);
-  if (Wire.write(command) != 1){
+  if ((data = wiringPiI2CReadReg16(fd, command)) == -1){
     return STATUS_ERROR;
   }
-  if (Wire.endTransmission(false)){  // NB: don't send stop here
-    return STATUS_ERROR;
-  }
-  if (Wire.requestFrom(uint8_t(I2C_ADDRESS), uint8_t(2)) != 2){
-    return STATUS_ERROR;
-  }
-  data = Wire.read();
-  data |= uint16_t(Wire.read()) << 8;
   return STATUS_OK;
 }
 
